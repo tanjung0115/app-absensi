@@ -1,0 +1,20 @@
+# Python & Virtualenv
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment & Secrets
+.env
+
+# Local Databases & Backups
+*.db
+*.sqlite
+*.sqlite3
+*.zip
+uploads/
+
+# IDE
+.vscode/
+.idea/

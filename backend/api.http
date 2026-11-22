@@ -1,0 +1,137 @@
+@baseUrl = http://127.0.0.1:8000
+@userNip = 2001
+@userPassword = rahasia123
+
+### Root
+GET {{baseUrl}}/
+
+### Register user (status pending)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "nip": "{{userNip}}",
+  "nama": "User Mobile",
+  "password": "{{userPassword}}",
+  "kepegawaian": "PNS"
+}
+
+### Login admin
+# Set ADMIN_NIP and ADMIN_PASSWORD in .env first
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "nip": "admin",
+  "password": "admin123"
+}
+
+### Login user (works only after approved by admin)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "nip": "{{userNip}}",
+  "password": "{{userPassword}}"
+}
+
+### Profile
+GET {{baseUrl}}/profile
+Authorization: Bearer {{userToken}}
+
+### Update profile
+PUT {{baseUrl}}/profile
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "nama": "User Mobile Updated",
+  "foto": "https://example.com/profil.jpg",
+  "kepegawaian": "PKKK"
+}
+
+### Clock In
+POST {{baseUrl}}/clock-in
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "status": "hadir",
+  "foto_masuk": "foto_masuk.jpg",
+  "lat_masuk": -6.200000,
+  "long_masuk": 106.816666,
+  "catatan": "Masuk kantor"
+}
+
+### Clock Out
+POST {{baseUrl}}/clock-out
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "foto_keluar": "foto_keluar.jpg",
+  "lat_keluar": -6.200000,
+  "long_keluar": 106.816666
+}
+
+### Riwayat
+GET {{baseUrl}}/riwayat
+Authorization: Bearer {{userToken}}
+
+### Buat surat keterangan
+POST {{baseUrl}}/surat
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "tanggal": "2026-03-21",
+  "jenis": "izin",
+  "keterangan": "Ada urusan keluarga"
+}
+
+### List surat (user/admin)
+GET {{baseUrl}}/surat
+Authorization: Bearer {{userToken}}
+
+### List surat dengan pagination/filter admin
+GET {{baseUrl}}/surat?status=diterima&jenis=izin&limit=10&offset=0
+Authorization: Bearer {{adminToken}}
+
+### Admin review surat
+PUT {{baseUrl}}/surat/1/review
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "diterima"
+}
+
+### Admin list users
+GET {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+
+### Admin approve user
+PUT {{baseUrl}}/approve-user
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "user_id": 2,
+  "status": "aktif"
+}
+
+### Admin rekap presensi
+GET {{baseUrl}}/rekap?bulan=3&tahun=2026
+Authorization: Bearer {{adminToken}}
+
+### Admin dashboard ringkas
+GET {{baseUrl}}/admin/dashboard
+Authorization: Bearer {{adminToken}}
+
+### Admin dashboard tren bulanan
+GET {{baseUrl}}/admin/dashboard/trends?tahun=2026
+Authorization: Bearer {{adminToken}}
+
+### Admin export rekap Excel
+GET {{baseUrl}}/export?bulan=3&tahun=2026
+Authorization: Bearer {{adminToken}}
