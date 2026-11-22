@@ -129,9 +129,17 @@ def ensure_admin_exists(db: Session) -> None:
 
     existing_admin = db.query(User).filter(User.nip == admin_nip).first()
     if existing_admin:
-        if existing_admin.role != "admin" or existing_admin.status != "aktif":
+        changed = False
+        if existing_admin.role != "admin":
             existing_admin.role = "admin"
+            changed = True
+        if existing_admin.status != "aktif":
             existing_admin.status = "aktif"
+            changed = True
+        if not verify_password(admin_password, existing_admin.password):
+            existing_admin.password = hash_password(admin_password)
+            changed = True
+        if changed:
             db.commit()
         return
 
