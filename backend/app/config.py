@@ -13,10 +13,11 @@ def _parse_time(value: str, default: str) -> time:
         return datetime.strptime(default, "%H:%M").time()
 
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg2://postgres:postgres@localhost:5432/absensi_db",
-)
+_raw_db_url = os.getenv("DATABASE_URL", "").strip().strip('"').strip("'")
+if _raw_db_url.startswith("psql "):
+    _raw_db_url = _raw_db_url[5:].strip().strip('"').strip("'")
+
+DATABASE_URL = _raw_db_url or "postgresql+psycopg2://postgres:postgres@localhost:5432/absensi_db"
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
