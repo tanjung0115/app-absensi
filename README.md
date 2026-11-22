@@ -93,6 +93,22 @@ absensi-app/
 
 ---
 
+## Deploy ke Vercel
+
+Proyek ini sudah dilengkapi `vercel.json`, `requirements.txt` (root), dan entrypoint `api/index.py` untuk deploy ke Vercel:
+
+1. **Import Repository** `tanjung0115/app-absensi` di dashboard Vercel.
+2. **Siapkan Database PostgreSQL** (misalnya **Neon Postgres** dari Vercel Marketplace atau Supabase), karena SQLite lokal tidak persisten di lingkungan serverless.
+3. **Atur Environment Variables** di Vercel Project Settings:
+   - `DATABASE_URL` (connection string PostgreSQL)
+   - `JWT_SECRET_KEY` (string acak yang aman)
+   - `OFFICE_LAT`, `OFFICE_LONG`, `MAX_DISTANCE_METERS`
+   - `CLOCK_IN_START`, `CLOCK_IN_END`, `CLOCK_OUT_START`, `CLOCK_OUT_END`
+   - `ADMIN_NIP`, `ADMIN_PASSWORD`, `ADMIN_NAME`
+4. Klik **Deploy**. Vercel akan menyajikan `frontend/` secara statis dan menjalankan FastAPI melalui `api/index.py`.
+
+---
+
 ## Dokumentasi Tampilan
 
 ### 1. Halaman Masuk Pegawai (`/`)
