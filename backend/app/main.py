@@ -120,15 +120,19 @@ def validate_office_distance(lat: float, lon: float) -> float:
 
 
 def ensure_admin_exists(db: Session) -> None:
-    admin_nip = os.getenv("ADMIN_NIP")
-    admin_password = os.getenv("ADMIN_PASSWORD")
-    admin_name = os.getenv("ADMIN_NAME", "Administrator")
+    admin_nip = (os.getenv("ADMIN_NIP") or "").strip()
+    admin_password = (os.getenv("ADMIN_PASSWORD") or "").strip()
+    admin_name = (os.getenv("ADMIN_NAME") or "Administrator").strip()
 
     if not admin_nip or not admin_password:
         return
 
     existing_admin = db.query(User).filter(User.nip == admin_nip).first()
     if existing_admin:
+        if existing_admin.role != "admin" or existing_admin.status != "aktif":
+            existing_admin.role = "admin"
+            existing_admin.status = "aktif"
+            db.commit()
         return
 
     db.add(
@@ -178,6 +182,7 @@ def register(data: RegisterRequest, db: Annotated[Session, Depends(get_db)]):
 
 @app.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db: Annotated[Session, Depends(get_db)]):
+    ensure_admin_exists(db)
     user = db.query(User).filter(User.nip == data.nip).first()
     if not user or not verify_password(data.password, user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="NIP atau password salah")
