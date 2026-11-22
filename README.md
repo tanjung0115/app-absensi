@@ -47,6 +47,8 @@ absensi-app/
 │   │   └── app.js           # Router & shell utama
 │   ├── index.html
 │   └── styles.css
+├── docs/
+│   └── screenshots/         # Dokumentasi tampilan aplikasi
 ├── .gitignore
 └── README.md
 ```
@@ -88,3 +90,38 @@ absensi-app/
    - **Portal Pegawai**: `http://127.0.0.1:8000/`
    - **Portal Administrator**: `http://127.0.0.1:8000/admin`
    - **Swagger UI (Dokumentasi API)**: `http://127.0.0.1:8000/docs`
+
+---
+
+## Dokumentasi Tampilan
+
+### 1. Halaman Masuk Pegawai (`/`)
+Halaman autentikasi khusus pegawai menggunakan **NIP** dan **Kata Sandi**. Portal pegawai terpisah sepenuhnya dari portal administrator sehingga pegawai tidak melihat maupun mengakses menu admin.
+
+![Halaman Masuk Pegawai](docs/screenshots/01-login-pegawai.png)
+
+### 2. Registrasi Pegawai Baru (`/`)
+Tab **Daftar Pegawai** untuk pendaftaran akun baru dengan mengisi NIP, Nama Lengkap, Status Kepegawaian (`Staff` atau `Magang`), dan Kata Sandi. Akun yang baru mendaftar berstatus `pending` dan perlu disetujui admin sebelum dapat digunakan untuk login.
+
+![Registrasi Pegawai Baru](docs/screenshots/02-registrasi-pegawai.png)
+
+### 3. Portal Pegawai — Presensi Hari Ini (`/`)
+Ruang kerja utama pegawai setelah login:
+- Menampilkan jam lokal *real-time*, jendela jam masuk (`07:00 – 09:00`), jam pulang (`16:00 – 18:00`), dan status presensi hari ini.
+- Mendukung pilihan status kehadiran (`HADIR`, `WFH`, `IZIN`, `SAKIT`), pengambilan foto bukti lewat kamera atau unggah file, serta verifikasi koordinat GPS terhadap titik kantor (maksimal radius `50 m`) sebelum melakukan **Clock In** atau **Clock Out**.
+- Sidebar kiri juga menyediakan akses ke **Riwayat Presensi**, **Surat Keterangan**, dan **Profil Saya** (termasuk klik langsung pada kartu profil di kiri bawah).
+
+![Portal Pegawai - Presensi Hari Ini](docs/screenshots/03-presensi-pegawai.png)
+
+### 4. Halaman Masuk Administrator (`/admin`)
+Portal login terpisah khusus untuk administrator menggunakan kredensial admin yang terdaftar. Akun pegawai biasa akan ditolak apabila mencoba masuk melalui rute `/admin`.
+
+![Halaman Masuk Administrator](docs/screenshots/04-login-admin.png)
+
+### 5. Panel Administrator — Ringkasan (`/admin`)
+Dashboard pemantauan untuk admin yang menampilkan:
+- **Kartu KPI**: Total Pegawai (berstatus aktif), Menunggu Persetujuan, Surat Pending, dan Presensi Hari Ini.
+- **Grafik Tren Tahunan**: Distribusi jumlah presensi dan total pengajuan surat per bulan dalam satu tahun.
+- **Tindakan Cepat**: Pintasan langsung ke halaman **Verifikasi Pegawai**, **Tinjau Surat Keterangan**, serta **Rekap & Ekspor Excel**.
+
+![Panel Administrator - Ringkasan](docs/screenshots/05-dashboard-admin.png)
