@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import extract, func, inspect
@@ -73,14 +73,20 @@ if FRONTEND_DIR.exists():
 
 @app.middleware("http")
 async def _ensure_db_middleware(request: Request, call_next):
-    if not _schema_ready and request.url.path not in ("/", "/admin", "/docs", "/openapi.json"):
-        ensure_schema()
-        db = SessionLocal()
-        try:
-            ensure_admin_exists(db)
-        finally:
-            db.close()
-    return await call_next(request)
+    try:
+        if not _schema_ready and request.url.path not in ("/", "/admin", "/docs", "/openapi.json"):
+            ensure_schema()
+            db = SessionLocal()
+            try:
+                ensure_admin_exists(db)
+            finally:
+                db.close()
+        return await call_next(request)
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Database/Server error: {type(exc).__name__}: {exc}"},
+        )
 
 
 def get_current_user(
