@@ -33,14 +33,33 @@ from app.services.attendance import current_local_datetime, haversine_distance_m
 from app.services.security import create_access_token, decode_token, hash_password, verify_password
 
 
+_schema_ready = False
+
+
+def ensure_schema() -> None:
+    global _schema_ready
+    if _schema_ready:
+        return
+    Base.metadata.create_all(bind=engine)
+    with engine.begin() as conn:
+        user_cols = {col["name"] for col in inspect(conn).get_columns("users")}
+        if "divisi" not in user_cols:
+            conn.exec_driver_sql("ALTER TABLE users ADD COLUMN divisi VARCHAR")
+    _schema_ready = True
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    db = SessionLocal()
     try:
-        ensure_admin_exists(db)
-        yield
-    finally:
-        db.close()
+        ensure_schema()
+        db = SessionLocal()
+        try:
+            ensure_admin_exists(db)
+        finally:
+            db.close()
+    except Exception:
+        pass
+    yield
 
 
 app = FastAPI(lifespan=lifespan)
@@ -51,11 +70,17 @@ FRONTEND_INDEX = FRONTEND_DIR / "index.html"
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
-Base.metadata.create_all(bind=engine)
-with engine.begin() as _conn:
-    _user_cols = {col["name"] for col in inspect(_conn).get_columns("users")}
-    if "divisi" not in _user_cols:
-        _conn.exec_driver_sql("ALTER TABLE users ADD COLUMN divisi VARCHAR")
+
+@app.middleware("http")
+async def _ensure_db_middleware(request: Request, call_next):
+    if not _schema_ready and request.url.path not in ("/", "/admin", "/docs", "/openapi.json"):
+        ensure_schema()
+        db = SessionLocal()
+        try:
+            ensure_admin_exists(db)
+        finally:
+            db.close()
+    return await call_next(request)
 
 
 def get_current_user(

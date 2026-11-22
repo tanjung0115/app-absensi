@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "backend/**"
+    }
+  },
   "rewrites": [
     { "source": "/static/(.*)", "destination": "/frontend/$1" },
     { "source": "/", "destination": "/frontend/index.html" },
