@@ -442,7 +442,10 @@ def clock_out(
     if record.jam_keluar:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Anda sudah clock-out hari ini")
 
-    jarak_keluar = validate_office_distance(payload.lat_keluar, payload.long_keluar)
+    if record.status == "wfh":
+        jarak_keluar = haversine_distance_meters(payload.lat_keluar, payload.long_keluar, OFFICE_LAT, OFFICE_LONG)
+    else:
+        jarak_keluar = validate_office_distance(payload.lat_keluar, payload.long_keluar)
 
     record.jam_keluar = now
     record.foto_keluar = payload.foto_keluar

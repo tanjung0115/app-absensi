@@ -55,12 +55,15 @@ export async function renderPresensiTab(container, _profile) {
     }
     const dist = haversineMeters(lat, long, OFFICE_COORDS.lat, OFFICE_COORDS.long);
     const inRange = dist <= OFFICE_COORDS.maxMeters;
+    const isWfh = selectedStatus === "wfh" || (todayRecord?.jam_masuk && !todayRecord?.jam_keluar && todayRecord?.status === "wfh");
     gpsInfo.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
         <span class="mono small">${lat.toFixed(6)}, ${long.toFixed(6)}</span>
-        <span class="badge ${inRange ? "badge-green" : "badge-red"}">
-          ${dist.toFixed(1)} m · ${inRange ? "Dalam radius" : "Di luar radius 50 m"}
-        </span>
+        ${
+          isWfh
+            ? `<span class="badge badge-blue">${dist.toFixed(1)} m · WFH (Bebas lokasi)</span>`
+            : `<span class="badge ${inRange ? "badge-green" : "badge-red"}">${dist.toFixed(1)} m · ${inRange ? "Dalam radius" : "Di luar radius 50 m"}</span>`
+        }
       </div>
     `;
   }
@@ -103,10 +106,13 @@ export async function renderPresensiTab(container, _profile) {
           <div class="field">
             <label>Jenis Kehadiran (Clock-In)</label>
             <div class="status-pills" id="status-pills">
-              ${["hadir", "wfh"]
+              ${[
+                { value: "hadir", label: "WFO" },
+                { value: "wfh", label: "WFH" },
+              ]
                 .map(
                   (s) =>
-                    `<button type="button" class="status-pill-btn ${s === selectedStatus ? "active" : ""}" data-status="${s}">${s.toUpperCase()}</button>`
+                    `<button type="button" class="status-pill-btn ${s.value === selectedStatus ? "active" : ""}" data-status="${s.value}">${s.label}</button>`
                 )
                 .join("")}
             </div>
@@ -211,6 +217,7 @@ export async function renderPresensiTab(container, _profile) {
       selectedStatus = btn.dataset.status;
       container.querySelectorAll("#status-pills .status-pill-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
+      updateGpsDisplay();
     });
   });
 
