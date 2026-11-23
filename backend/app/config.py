@@ -25,8 +25,8 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-secret")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
-OFFICE_LAT = float(os.getenv("OFFICE_LAT", "-6.200000"))
-OFFICE_LONG = float(os.getenv("OFFICE_LONG", "106.816666"))
+OFFICE_LAT = float(os.getenv("OFFICE_LAT", "-6.957466"))
+OFFICE_LONG = float(os.getenv("OFFICE_LONG", "107.688987"))
 MAX_DISTANCE_METERS = float(os.getenv("MAX_DISTANCE_METERS", "50"))
 
 CLOCK_IN_START = _parse_time(os.getenv("CLOCK_IN_START", "07:00"), "07:00")

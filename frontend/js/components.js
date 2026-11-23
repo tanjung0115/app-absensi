@@ -1,7 +1,8 @@
 export const OFFICE_COORDS = {
-  lat: -6.2,
-  long: 106.816666,
+  lat: -6.957466,
+  long: 107.688987,
   maxMeters: 50,
+  name: "PT. Validata Teknologi",
 };
 
 export function escapeHtml(value) {

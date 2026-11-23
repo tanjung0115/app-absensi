@@ -144,7 +144,7 @@ export async function renderPresensiTab(container, _profile) {
           <div class="gps-box">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
               <span style="font-weight:600; font-size:13px;">Koordinat GPS</span>
-              <span class="mono small muted">Kantor: ${OFFICE_COORDS.lat.toFixed(4)}, ${OFFICE_COORDS.long.toFixed(4)}</span>
+              <span class="mono small muted">${OFFICE_COORDS.name}: ${OFFICE_COORDS.lat.toFixed(4)}, ${OFFICE_COORDS.long.toFixed(4)}</span>
             </div>
             <div id="gps-info"></div>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
