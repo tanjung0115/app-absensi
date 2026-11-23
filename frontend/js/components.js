@@ -57,6 +57,30 @@ export function openModal({ title, bodyHtml, onMount }) {
   }
 }
 
+export function openBuktiModal(bukti, buktiNama = "bukti") {
+  if (!bukti) return;
+  const isPdf = bukti.startsWith("data:application/pdf");
+  openModal({
+    title: `Bukti Pendukung — ${buktiNama || (isPdf ? "Dokumen PDF" : "Foto")}`,
+    bodyHtml: `
+      <div class="form-stack">
+        ${
+          isPdf
+            ? `<iframe src="${bukti}" style="width:100%; height:420px; border:1px solid var(--border-hairline); border-radius:8px;"></iframe>`
+            : `<img src="${bukti}" alt="Bukti surat" style="width:100%; max-height:420px; object-fit:contain; border-radius:8px; background:var(--bg-subtle);" />`
+        }
+        <div class="modal-actions">
+          <a href="${bukti}" download="${escapeHtml(buktiNama || (isPdf ? "bukti.pdf" : "bukti.jpg"))}" class="btn btn-secondary btn-sm">Unduh File</a>
+          <button type="button" class="btn btn-primary btn-sm" id="bukti-close-btn">Tutup</button>
+        </div>
+      </div>
+    `,
+    onMount: (body) => {
+      body.querySelector("#bukti-close-btn")?.addEventListener("click", closeModal);
+    },
+  });
+}
+
 export function statusBadge(status) {
   const s = String(status || "").toLowerCase();
   const map = {

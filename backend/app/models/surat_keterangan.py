@@ -13,6 +13,8 @@ class SuratKeterangan(Base):
     tanggal = Column(Date, nullable=False, index=True)
     jenis = Column(String, nullable=False)
     keterangan = Column(Text, nullable=True)
+    bukti = Column(Text, nullable=True)
+    bukti_nama = Column(String, nullable=True)
     status = Column(String, nullable=False, default="pending")
     catatan_review = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

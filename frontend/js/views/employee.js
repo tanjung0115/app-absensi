@@ -6,6 +6,7 @@ import {
   formatDateId,
   formatTimeId,
   haversineMeters,
+  openBuktiModal,
   showToast,
   statusBadge,
 } from "../components.js";
@@ -95,19 +96,22 @@ export async function renderPresensiTab(container, _profile) {
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">Bukti Foto &amp; Keterangan</h3>
-          <span class="small muted">Wajib untuk status Hadir &amp; Clock-Out</span>
+          <span class="small muted">Wajib untuk Hadir, WFH, &amp; Clock-Out</span>
         </div>
 
         <div class="form-stack">
           <div class="field">
             <label>Jenis Kehadiran (Clock-In)</label>
             <div class="status-pills" id="status-pills">
-              ${["hadir", "wfh", "izin", "sakit"]
+              ${["hadir", "wfh"]
                 .map(
                   (s) =>
                     `<button type="button" class="status-pill-btn ${s === selectedStatus ? "active" : ""}" data-status="${s}">${s.toUpperCase()}</button>`
                 )
                 .join("")}
+            </div>
+            <div class="small muted" style="margin-top:4px;">
+              Untuk <strong>Izin, Sakit, atau Lupa Absen</strong>, tidak perlu foto presensi — ajukan melalui menu <strong>Surat Keterangan</strong>.
             </div>
           </div>
 
@@ -128,8 +132,8 @@ export async function renderPresensiTab(container, _profile) {
           </div>
 
           <div class="field">
-            <label for="presensi-catatan">Catatan (opsional)</label>
-            <textarea id="presensi-catatan" class="textarea" placeholder="Contoh: Rapat di ruang aula, atau keterangan WFH"></textarea>
+            <label for="presensi-catatan">Keterangan / Catatan (wajib untuk Hadir &amp; WFH)</label>
+            <textarea id="presensi-catatan" class="textarea" placeholder="Contoh: Hadir di kantor ruang IT, atau aktivitas WFH hari ini"></textarea>
           </div>
         </div>
       </div>
@@ -304,9 +308,13 @@ export async function renderPresensiTab(container, _profile) {
   });
 
   container.querySelector("#clock-in-btn").addEventListener("click", async () => {
-    const catatan = container.querySelector("#presensi-catatan").value.trim() || null;
-    if (selectedStatus === "hadir" && (!photoDataUrl || lat === null || long === null)) {
-      showToast("Status Hadir wajib melampirkan foto dan koordinat lokasi", "error");
+    const catatan = container.querySelector("#presensi-catatan").value.trim();
+    if (!photoDataUrl || !catatan) {
+      showToast("Status Hadir dan WFH wajib melampirkan foto serta keterangan", "error");
+      return;
+    }
+    if (selectedStatus === "hadir" && (lat === null || long === null)) {
+      showToast("Status Hadir wajib mengambil koordinat lokasi GPS", "error");
       return;
     }
     const btn = container.querySelector("#clock-in-btn");
@@ -437,6 +445,8 @@ export async function renderRiwayatTab(container) {
 
 export async function renderSuratTab(container) {
   let statusFilter = "";
+  let buktiDataUrl = "";
+  let buktiNama = "";
 
   async function load() {
     try {
@@ -469,6 +479,7 @@ export async function renderSuratTab(container) {
                       <th>Tanggal</th>
                       <th>Jenis</th>
                       <th>Keterangan</th>
+                      <th>Bukti</th>
                       <th>Status</th>
                       <th>Catatan Admin</th>
                     </tr>
@@ -481,6 +492,13 @@ export async function renderSuratTab(container) {
                         <td class="mono">${formatDateId(s.tanggal)}</td>
                         <td>${statusBadge(s.jenis)}</td>
                         <td>${escapeHtml(s.keterangan || "-")}</td>
+                        <td>
+                          ${
+                            s.bukti
+                              ? `<button type="button" class="btn btn-secondary btn-sm" data-view-bukti="${s.id}">Lihat ${s.bukti.startsWith("data:application/pdf") ? "PDF" : "Foto"}</button>`
+                              : `<span class="small muted">-</span>`
+                          }
+                        </td>
                         <td>${statusBadge(s.status)}</td>
                         <td class="small muted">${escapeHtml(s.catatan_review || "-")}</td>
                       </tr>
@@ -514,8 +532,19 @@ export async function renderSuratTab(container) {
               </div>
 
               <div class="field">
+                <label for="surat-bukti-input">Bukti Pendukung (Foto atau PDF)</label>
+                <label class="btn btn-secondary btn-sm" style="margin:0; width:fit-content; cursor:pointer;">
+                  Pilih Foto / Dokumen PDF
+                  <input id="surat-bukti-input" type="file" accept="image/*,application/pdf" hidden />
+                </label>
+                <div id="surat-bukti-preview" class="small muted" style="margin-top:4px;">
+                  Belum ada file dipilih (maks. PDF 2,5 MB).
+                </div>
+              </div>
+
+              <div class="field">
                 <label for="surat-ket">Keterangan / Alasan</label>
-                <textarea id="surat-ket" class="textarea" maxlength="500" placeholder="Jelaskan alasan pengajuan Anda..."></textarea>
+                <textarea id="surat-ket" class="textarea" maxlength="500" placeholder="Jelaskan alasan pengajuan Anda..." required></textarea>
               </div>
 
               <button type="submit" class="btn btn-primary btn-block" id="surat-submit-btn">Kirim Pengajuan</button>
@@ -529,8 +558,57 @@ export async function renderSuratTab(container) {
         load();
       });
 
+      container.querySelectorAll("[data-view-bukti]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = data.find((x) => String(x.id) === btn.dataset.viewBukti);
+          if (item?.bukti) openBuktiModal(item.bukti, item.bukti_nama);
+        });
+      });
+
+      const previewEl = container.querySelector("#surat-bukti-preview");
+      container.querySelector("#surat-bukti-input")?.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        buktiNama = file.name;
+
+        if (file.type === "application/pdf") {
+          if (file.size > 2.5 * 1024 * 1024) {
+            showToast("Ukuran dokumen PDF maksimal 2,5 MB", "error");
+            buktiDataUrl = "";
+            buktiNama = "";
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => {
+            buktiDataUrl = String(reader.result || "");
+            previewEl.innerHTML = `<span class="badge badge-blue">PDF: ${escapeHtml(buktiNama)}</span>`;
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type.startsWith("image/")) {
+          const img = new Image();
+          img.onload = () => {
+            buktiDataUrl = compressImageToDataUrl(img, 900);
+            URL.revokeObjectURL(img.src);
+            previewEl.innerHTML = `<img src="${buktiDataUrl}" alt="Preview bukti" style="max-height:110px; border-radius:6px; border:1px solid var(--border-hairline); margin-top:4px;" />`;
+          };
+          img.src = URL.createObjectURL(file);
+        } else {
+          showToast("Format file harus berupa foto atau PDF", "error");
+        }
+      });
+
       container.querySelector("#surat-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
+        const ket = container.querySelector("#surat-ket").value.trim();
+        if (!buktiDataUrl) {
+          showToast("Wajib melampirkan bukti foto atau dokumen PDF", "error");
+          return;
+        }
+        if (!ket) {
+          showToast("Keterangan / alasan wajib diisi", "error");
+          return;
+        }
+
         const btn = container.querySelector("#surat-submit-btn");
         btn.disabled = true;
         try {
@@ -539,9 +617,13 @@ export async function renderSuratTab(container) {
             body: {
               tanggal: container.querySelector("#surat-tanggal").value,
               jenis: container.querySelector("#surat-jenis").value,
-              keterangan: container.querySelector("#surat-ket").value.trim() || null,
+              keterangan: ket,
+              bukti: buktiDataUrl,
+              bukti_nama: buktiNama || null,
             },
           });
+          buktiDataUrl = "";
+          buktiNama = "";
           showToast(res.message || "Surat berhasil diajukan");
           load();
         } catch (err) {

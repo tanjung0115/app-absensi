@@ -45,6 +45,11 @@ def ensure_schema() -> None:
         user_cols = {col["name"] for col in inspect(conn).get_columns("users")}
         if "divisi" not in user_cols:
             conn.exec_driver_sql("ALTER TABLE users ADD COLUMN divisi VARCHAR")
+        surat_cols = {col["name"] for col in inspect(conn).get_columns("surat_keterangan")}
+        if "bukti" not in surat_cols:
+            conn.exec_driver_sql("ALTER TABLE surat_keterangan ADD COLUMN bukti TEXT")
+        if "bukti_nama" not in surat_cols:
+            conn.exec_driver_sql("ALTER TABLE surat_keterangan ADD COLUMN bukti_nama VARCHAR")
     _schema_ready = True
 
 
@@ -252,11 +257,18 @@ def create_surat(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
+    if not payload.keterangan.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Keterangan/alasan wajib diisi")
+    if not (payload.bukti.startswith("data:image/") or payload.bukti.startswith("data:application/pdf")):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Bukti harus berupa gambar atau dokumen PDF")
+
     surat = SuratKeterangan(
         user_id=current_user.id,
         tanggal=payload.tanggal,
         jenis=payload.jenis,
-        keterangan=payload.keterangan,
+        keterangan=payload.keterangan.strip(),
+        bukti=payload.bukti,
+        bukti_nama=payload.bukti_nama,
         status="pending",
     )
     db.add(surat)
@@ -307,6 +319,8 @@ def list_surat(
             tanggal=row.tanggal,
             jenis=row.jenis,
             keterangan=row.keterangan,
+            bukti=row.bukti,
+            bukti_nama=row.bukti_nama,
             status=row.status,
             catatan_review=row.catatan_review,
             created_at=row.created_at,
@@ -360,11 +374,17 @@ def clock_in(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Anda sudah clock-in hari ini")
 
     jarak_masuk = None
-    if payload.status == "hadir":
-        if payload.foto_masuk is None or payload.lat_masuk is None or payload.long_masuk is None:
+    if payload.status in ("hadir", "wfh"):
+        if not payload.foto_masuk or not (payload.catatan and payload.catatan.strip()):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Status hadir wajib kirim foto_masuk, lat_masuk, long_masuk",
+                detail="Status hadir dan WFH wajib melampirkan foto serta keterangan",
+            )
+    if payload.status == "hadir":
+        if payload.lat_masuk is None or payload.long_masuk is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Status hadir wajib mengirim koordinat lokasi (lat_masuk, long_masuk)",
             )
         jarak_masuk = validate_office_distance(payload.lat_masuk, payload.long_masuk)
 

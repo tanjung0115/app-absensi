@@ -5,7 +5,9 @@ from pydantic import BaseModel, Field
 class SuratCreateRequest(BaseModel):
     tanggal: date
     jenis: str = Field(pattern="^(izin|sakit|lupa)$")
-    keterangan: str | None = Field(default=None, max_length=500)
+    keterangan: str = Field(min_length=1, max_length=500)
+    bukti: str = Field(min_length=1)
+    bukti_nama: str | None = Field(default=None, max_length=255)
 
 
 class SuratItem(BaseModel):
@@ -16,6 +18,8 @@ class SuratItem(BaseModel):
     tanggal: date
     jenis: str
     keterangan: str | None
+    bukti: str | None = None
+    bukti_nama: str | None = None
     status: str
     catatan_review: str | None
     created_at: datetime

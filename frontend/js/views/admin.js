@@ -5,6 +5,7 @@ import {
   escapeHtml,
   formatDateId,
   formatTimeId,
+  openBuktiModal,
   openModal,
   renderTrendsSvgChart,
   showToast,
@@ -271,6 +272,7 @@ export async function renderAdminSuratTab(container) {
                     <th>Tanggal</th>
                     <th>Jenis</th>
                     <th>Keterangan</th>
+                    <th>Bukti</th>
                     <th>Status</th>
                     <th>Catatan Review</th>
                     <th style="text-align:right;">Aksi</th>
@@ -288,6 +290,13 @@ export async function renderAdminSuratTab(container) {
                       <td class="mono">${formatDateId(s.tanggal)}</td>
                       <td>${statusBadge(s.jenis)}</td>
                       <td>${escapeHtml(s.keterangan || "-")}</td>
+                      <td>
+                        ${
+                          s.bukti
+                            ? `<button type="button" class="btn btn-secondary btn-sm" data-admin-bukti="${s.id}">Lihat ${s.bukti.startsWith("data:application/pdf") ? "PDF" : "Foto"}</button>`
+                            : `<span class="small muted">-</span>`
+                        }
+                      </td>
                       <td>${statusBadge(s.status)}</td>
                       <td class="small muted">${escapeHtml(s.catatan_review || "-")}</td>
                       <td style="text-align:right;">
@@ -312,6 +321,13 @@ export async function renderAdminSuratTab(container) {
       container.querySelector("#admin-surat-jenis")?.addEventListener("change", (e) => {
         jenisFilter = e.target.value;
         load();
+      });
+
+      container.querySelectorAll("[data-admin-bukti]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = data.find((x) => String(x.id) === btn.dataset.adminBukti);
+          if (item?.bukti) openBuktiModal(item.bukti, item.bukti_nama);
+        });
       });
 
       container.querySelectorAll("[data-review]").forEach((btn) => {
