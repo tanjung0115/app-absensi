@@ -82,6 +82,77 @@ export function openBuktiModal(bukti, buktiNama = "bukti") {
   });
 }
 
+export function openAbsensiDetailModal(item) {
+  if (!item) return;
+  const latIn = item.lokasi_masuk?.lat ?? item.lat_masuk;
+  const longIn = item.lokasi_masuk?.long ?? item.long_masuk;
+  const latOut = item.lokasi_keluar?.lat ?? item.lat_keluar;
+  const longOut = item.lokasi_keluar?.long ?? item.long_keluar;
+
+  const coordIn = latIn != null && longIn != null ? `${Number(latIn).toFixed(6)}, ${Number(longIn).toFixed(6)}` : "-";
+  const coordOut = latOut != null && longOut != null ? `${Number(latOut).toFixed(6)}, ${Number(longOut).toFixed(6)}` : "-";
+
+  openModal({
+    title: `Detail Presensi — ${formatDateId(item.tanggal)}`,
+    bodyHtml: `
+      <div class="form-stack">
+        ${
+          item.nama
+            ? `<div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border-hairline);">
+                <div>
+                  <div style="font-weight:700;">${escapeHtml(item.nama)}</div>
+                  <div class="mono small muted">${escapeHtml(item.nip || "")}${item.kepegawaian ? ` · ${escapeHtml(item.kepegawaian)}` : ""}</div>
+                </div>
+                ${statusBadge(item.status)}
+              </div>`
+            : `<div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="small muted">Status Kehadiran</span>
+                ${statusBadge(item.status)}
+              </div>`
+        }
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div style="padding:10px 12px; background:var(--bg-subtle); border-radius:8px;">
+            <div class="small" style="font-weight:700; margin-bottom:6px;">Clock-In</div>
+            <div class="small"><span class="muted">Jam:</span> <span class="mono">${formatTimeId(item.jam_masuk)}</span></div>
+            <div class="small"><span class="muted">Jarak:</span> <span class="mono">${item.jarak_masuk != null ? `${Number(item.jarak_masuk).toFixed(1)} m` : "-"}</span></div>
+            <div class="small"><span class="muted">GPS:</span> <span class="mono">${coordIn}</span></div>
+            ${
+              item.foto_masuk
+                ? `<img src="${item.foto_masuk}" alt="Foto Masuk" style="margin-top:8px; width:100%; max-height:140px; object-fit:cover; border-radius:6px;" />`
+                : `<div class="small muted" style="margin-top:6px;">Tidak ada foto masuk</div>`
+            }
+          </div>
+
+          <div style="padding:10px 12px; background:var(--bg-subtle); border-radius:8px;">
+            <div class="small" style="font-weight:700; margin-bottom:6px;">Clock-Out</div>
+            <div class="small"><span class="muted">Jam:</span> <span class="mono">${formatTimeId(item.jam_keluar)}</span></div>
+            <div class="small"><span class="muted">Jarak:</span> <span class="mono">${item.jarak_keluar != null ? `${Number(item.jarak_keluar).toFixed(1)} m` : "-"}</span></div>
+            <div class="small"><span class="muted">GPS:</span> <span class="mono">${coordOut}</span></div>
+            ${
+              item.foto_keluar
+                ? `<img src="${item.foto_keluar}" alt="Foto Pulang" style="margin-top:8px; width:100%; max-height:140px; object-fit:cover; border-radius:6px;" />`
+                : `<div class="small muted" style="margin-top:6px;">Belum / tidak ada foto pulang</div>`
+            }
+          </div>
+        </div>
+
+        <div style="padding:10px 12px; border:1px solid var(--border-hairline); border-radius:8px;">
+          <div class="small muted" style="margin-bottom:3px;">Catatan</div>
+          <div class="small" style="white-space:pre-wrap;">${escapeHtml(item.catatan || "-")}</div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary btn-sm" id="abs-detail-close">Tutup</button>
+        </div>
+      </div>
+    `,
+    onMount: (body) => {
+      body.querySelector("#abs-detail-close")?.addEventListener("click", closeModal);
+    },
+  });
+}
+
 export function statusBadge(status) {
   const s = String(status || "").toLowerCase();
   const map = {

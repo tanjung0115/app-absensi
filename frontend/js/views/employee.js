@@ -6,6 +6,7 @@ import {
   formatDateId,
   formatTimeId,
   haversineMeters,
+  openAbsensiDetailModal,
   openBuktiModal,
   showToast,
   statusBadge,
@@ -359,6 +360,7 @@ export async function renderPresensiTab(container, _profile) {
       showToast("Clock-out wajib melampirkan foto dan koordinat lokasi", "error");
       return;
     }
+    const catatan = container.querySelector("#presensi-catatan").value.trim() || null;
     const btn = container.querySelector("#clock-out-btn");
     btn.disabled = true;
     try {
@@ -368,6 +370,7 @@ export async function renderPresensiTab(container, _profile) {
           foto_keluar: photoDataUrl,
           lat_keluar: lat,
           long_keluar: long,
+          catatan,
         },
       });
       showToast(data.message || "Clock-out berhasil");
@@ -422,7 +425,7 @@ export async function renderRiwayatTab(container) {
                   ${data
                     .map(
                       (row) => `
-                    <tr>
+                    <tr data-riwayat-id="${row.id}" style="cursor:pointer;" title="Klik untuk lihat detail">
                       <td class="mono">${formatDateId(row.tanggal)}</td>
                       <td class="mono">${formatTimeId(row.jam_masuk)}</td>
                       <td class="mono">${formatTimeId(row.jam_keluar)}</td>
@@ -441,6 +444,13 @@ export async function renderRiwayatTab(container) {
           }
         </div>
       `;
+
+      container.querySelectorAll("[data-riwayat-id]").forEach((tr) => {
+        tr.addEventListener("click", () => {
+          const item = data.find((x) => String(x.id) === tr.dataset.riwayatId);
+          if (item) openAbsensiDetailModal(item);
+        });
+      });
 
       container.querySelector("#prev-page")?.addEventListener("click", () => {
         offset = Math.max(0, offset - limit);

@@ -5,6 +5,7 @@ import {
   escapeHtml,
   formatDateId,
   formatTimeId,
+  openAbsensiDetailModal,
   openBuktiModal,
   openModal,
   renderTrendsSvgChart,
@@ -459,7 +460,7 @@ export async function renderAdminRekapTab(container) {
                   ${data
                     .map(
                       (r) => `
-                    <tr>
+                    <tr data-rekap-id="${r.id}" style="cursor:pointer;" title="Klik untuk lihat detail">
                       <td>
                         <div style="font-weight:600;">${escapeHtml(r.nama)}</div>
                         <div class="mono small muted">${escapeHtml(r.nip)}</div>
@@ -469,7 +470,13 @@ export async function renderAdminRekapTab(container) {
                       <td class="mono">${formatTimeId(r.jam_masuk)}</td>
                       <td class="mono">${formatTimeId(r.jam_keluar)}</td>
                       <td>${statusBadge(r.status)}</td>
-                      <td class="mono small">${r.jarak_masuk !== null ? `${r.jarak_masuk.toFixed(1)} m` : "-"}</td>
+                      <td class="mono small">${
+                        r.jarak_masuk !== null
+                          ? `${r.jarak_masuk.toFixed(1)} m`
+                          : r.jarak_keluar !== null
+                            ? `${r.jarak_keluar.toFixed(1)} m`
+                            : "-"
+                      }</td>
                       <td class="small">${escapeHtml(r.catatan || "-")}</td>
                     </tr>
                   `
@@ -482,6 +489,13 @@ export async function renderAdminRekapTab(container) {
           }
         </div>
       `;
+
+      container.querySelectorAll("[data-rekap-id]").forEach((tr) => {
+        tr.addEventListener("click", () => {
+          const item = data.find((x) => String(x.id) === tr.dataset.rekapId);
+          if (item) openAbsensiDetailModal(item);
+        });
+      });
 
       container.querySelector("#rekap-filter-form")?.addEventListener("submit", (e) => {
         e.preventDefault();

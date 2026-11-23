@@ -387,6 +387,8 @@ def clock_in(
                 detail="Status hadir wajib mengirim koordinat lokasi (lat_masuk, long_masuk)",
             )
         jarak_masuk = validate_office_distance(payload.lat_masuk, payload.long_masuk)
+    elif payload.lat_masuk is not None and payload.long_masuk is not None:
+        jarak_masuk = haversine_distance_meters(payload.lat_masuk, payload.long_masuk, OFFICE_LAT, OFFICE_LONG)
 
     final_status = payload.status
     message = "Clock-in berhasil"
@@ -452,6 +454,13 @@ def clock_out(
     record.lat_keluar = payload.lat_keluar
     record.long_keluar = payload.long_keluar
     record.jarak_keluar = jarak_keluar
+    if payload.catatan and payload.catatan.strip():
+        out_note = payload.catatan.strip()
+        if record.catatan and record.catatan.strip():
+            if out_note != record.catatan.strip():
+                record.catatan = f"{record.catatan.strip()} | Pulang: {out_note}"
+        else:
+            record.catatan = out_note
     db.commit()
 
     return ClockResponse(message="Clock-out berhasil", tanggal=record.tanggal, status=record.status)
@@ -483,6 +492,12 @@ def riwayat(
             catatan=row.catatan,
             jarak_masuk=row.jarak_masuk,
             jarak_keluar=row.jarak_keluar,
+            lat_masuk=row.lat_masuk,
+            long_masuk=row.long_masuk,
+            lat_keluar=row.lat_keluar,
+            long_keluar=row.long_keluar,
+            foto_masuk=row.foto_masuk,
+            foto_keluar=row.foto_keluar,
         )
         for row in rows
     ]
@@ -585,6 +600,8 @@ def rekap_presensi(
             },
             "jarak_masuk": item.jarak_masuk,
             "jarak_keluar": item.jarak_keluar,
+            "foto_masuk": item.foto_masuk,
+            "foto_keluar": item.foto_keluar,
             "catatan": item.catatan,
             "status": item.status,
         }

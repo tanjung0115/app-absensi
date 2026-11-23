@@ -15,6 +15,7 @@ class ClockOutRequest(BaseModel):
     foto_keluar: str
     lat_keluar: float
     long_keluar: float
+    catatan: str | None = None
 
 
 class AbsensiItem(BaseModel):
@@ -26,6 +27,12 @@ class AbsensiItem(BaseModel):
     catatan: str | None
     jarak_masuk: float | None
     jarak_keluar: float | None
+    lat_masuk: float | None = None
+    long_masuk: float | None = None
+    lat_keluar: float | None = None
+    long_keluar: float | None = None
+    foto_masuk: str | None = None
+    foto_keluar: str | None = None
 
 
 class ClockResponse(BaseModel):
