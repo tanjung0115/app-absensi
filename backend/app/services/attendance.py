@@ -1,5 +1,8 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta, timezone
 from math import asin, cos, radians, sin, sqrt
+
+
+WIB = timezone(timedelta(hours=7))
 
 
 def is_time_between(current_time: time, start_time: time, end_time: time) -> bool:
@@ -19,4 +22,4 @@ def haversine_distance_meters(lat1: float, lon1: float, lat2: float, lon2: float
 
 
 def current_local_datetime() -> datetime:
-    return datetime.now()
+    return datetime.now(WIB).replace(tzinfo=None)

@@ -349,15 +349,11 @@ def clock_in(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Akun belum aktif")
 
     now = current_local_datetime()
-    if not is_time_between(now.time(), CLOCK_IN_START, CLOCK_IN_END):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Absensi masuk hanya di jam {CLOCK_IN_START.strftime('%H:%M')} - {CLOCK_IN_END.strftime('%H:%M')}",
-        )
+    today = now.date()
 
     existing = (
         db.query(Absensi)
-        .filter(Absensi.user_id == current_user.id, Absensi.tanggal == date.today())
+        .filter(Absensi.user_id == current_user.id, Absensi.tanggal == today)
         .first()
     )
     if existing and existing.jam_masuk:
@@ -372,22 +368,28 @@ def clock_in(
             )
         jarak_masuk = validate_office_distance(payload.lat_masuk, payload.long_masuk)
 
+    final_status = payload.status
+    message = "Clock-in berhasil"
+    if payload.status == "hadir" and now.time() > CLOCK_IN_END:
+        final_status = "telat"
+        message = "Clock-in berhasil (Telat)"
+
     if existing:
         existing.jam_masuk = now
-        existing.status = payload.status
+        existing.status = final_status
         existing.foto_masuk = payload.foto_masuk
         existing.lat_masuk = payload.lat_masuk
         existing.long_masuk = payload.long_masuk
         existing.jarak_masuk = jarak_masuk
         existing.catatan = payload.catatan
         db.commit()
-        return ClockResponse(message="Clock-in berhasil", tanggal=existing.tanggal, status=existing.status)
+        return ClockResponse(message=message, tanggal=existing.tanggal, status=existing.status)
 
     record = Absensi(
         user_id=current_user.id,
-        tanggal=date.today(),
+        tanggal=today,
         jam_masuk=now,
-        status=payload.status,
+        status=final_status,
         foto_masuk=payload.foto_masuk,
         lat_masuk=payload.lat_masuk,
         long_masuk=payload.long_masuk,
@@ -397,7 +399,7 @@ def clock_in(
     db.add(record)
     db.commit()
 
-    return ClockResponse(message="Clock-in berhasil", tanggal=record.tanggal, status=record.status)
+    return ClockResponse(message=message, tanggal=record.tanggal, status=record.status)
 
 
 @app.post("/clock-out", response_model=ClockResponse)
@@ -407,15 +409,11 @@ def clock_out(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     now = current_local_datetime()
-    if not is_time_between(now.time(), CLOCK_OUT_START, CLOCK_OUT_END):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Absensi pulang hanya di jam {CLOCK_OUT_START.strftime('%H:%M')} - {CLOCK_OUT_END.strftime('%H:%M')}",
-        )
+    today = now.date()
 
     record = (
         db.query(Absensi)
-        .filter(Absensi.user_id == current_user.id, Absensi.tanggal == date.today())
+        .filter(Absensi.user_id == current_user.id, Absensi.tanggal == today)
         .first()
     )
 

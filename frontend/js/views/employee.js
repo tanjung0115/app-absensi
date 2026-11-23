@@ -73,11 +73,11 @@ export async function renderPresensiTab(container, _profile) {
       </div>
       <div class="window-chips">
         <div class="window-chip">
-          <span style="color:#bfd3c9;">Jendela Masuk</span>
+          <span style="color:#bfd3c9;">Jam Normal Masuk</span>
           <strong>07:00 – 09:00</strong>
         </div>
         <div class="window-chip">
-          <span style="color:#bfd3c9;">Jendela Pulang</span>
+          <span style="color:#bfd3c9;">Jam Normal Pulang</span>
           <strong>16:00 – 18:00</strong>
         </div>
         <div class="window-chip">

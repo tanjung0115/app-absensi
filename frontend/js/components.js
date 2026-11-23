@@ -62,6 +62,7 @@ export function statusBadge(status) {
   const map = {
     aktif: "badge-green",
     hadir: "badge-green",
+    telat: "badge-amber",
     diterima: "badge-green",
     pending: "badge-amber",
     izin: "badge-amber",
