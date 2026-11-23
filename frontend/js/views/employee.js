@@ -110,9 +110,6 @@ export async function renderPresensiTab(container, _profile) {
                 )
                 .join("")}
             </div>
-            <div class="small muted" style="margin-top:4px;">
-              Untuk <strong>Izin, Sakit, atau Lupa Absen</strong>, tidak perlu foto presensi — ajukan melalui menu <strong>Surat Keterangan</strong>.
-            </div>
           </div>
 
           <div class="camera-box" id="camera-box">
