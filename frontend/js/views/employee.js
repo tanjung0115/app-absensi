@@ -155,7 +155,6 @@ export async function renderPresensiTab(container, _profile) {
             <div id="gps-info"></div>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
               <button type="button" class="btn btn-secondary btn-sm" id="get-gps-btn">Ambil Lokasi GPS</button>
-              <button type="button" class="btn btn-secondary btn-sm" id="demo-gps-btn">Gunakan Titik Kantor</button>
             </div>
           </div>
 
@@ -302,13 +301,6 @@ export async function renderPresensiTab(container, _profile) {
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
-  });
-
-  container.querySelector("#demo-gps-btn").addEventListener("click", () => {
-    lat = OFFICE_COORDS.lat;
-    long = OFFICE_COORDS.long;
-    updateGpsDisplay();
-    showToast("Menggunakan koordinat titik kantor");
   });
 
   function setActiveClockBtn(which) {
