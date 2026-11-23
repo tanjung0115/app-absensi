@@ -154,8 +154,8 @@ export async function renderPresensiTab(container, _profile) {
           </div>
 
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:4px;">
-            <button type="button" class="btn btn-primary" id="clock-in-btn">Clock In</button>
-            <button type="button" class="btn btn-secondary" id="clock-out-btn">Clock Out</button>
+            <button type="button" class="btn ${todayRecord && todayRecord.jam_masuk && !todayRecord.jam_keluar ? "btn-secondary" : "btn-primary"}" id="clock-in-btn">Clock In</button>
+            <button type="button" class="btn ${todayRecord && todayRecord.jam_masuk && !todayRecord.jam_keluar ? "btn-primary" : "btn-secondary"}" id="clock-out-btn">Clock Out</button>
           </div>
 
           ${
@@ -304,7 +304,25 @@ export async function renderPresensiTab(container, _profile) {
     showToast("Menggunakan koordinat titik kantor");
   });
 
+  function setActiveClockBtn(which) {
+    const inBtn = container.querySelector("#clock-in-btn");
+    const outBtn = container.querySelector("#clock-out-btn");
+    if (!inBtn || !outBtn) return;
+    if (which === "out") {
+      inBtn.classList.remove("btn-primary");
+      inBtn.classList.add("btn-secondary");
+      outBtn.classList.remove("btn-secondary");
+      outBtn.classList.add("btn-primary");
+    } else {
+      outBtn.classList.remove("btn-primary");
+      outBtn.classList.add("btn-secondary");
+      inBtn.classList.remove("btn-secondary");
+      inBtn.classList.add("btn-primary");
+    }
+  }
+
   container.querySelector("#clock-in-btn").addEventListener("click", async () => {
+    setActiveClockBtn("in");
     const catatan = container.querySelector("#presensi-catatan").value.trim();
     if (!photoDataUrl || !catatan) {
       showToast("Status Hadir dan WFH wajib melampirkan foto serta keterangan", "error");
@@ -337,6 +355,7 @@ export async function renderPresensiTab(container, _profile) {
   });
 
   container.querySelector("#clock-out-btn").addEventListener("click", async () => {
+    setActiveClockBtn("out");
     if (!photoDataUrl || lat === null || long === null) {
       showToast("Clock-out wajib melampirkan foto dan koordinat lokasi", "error");
       return;
